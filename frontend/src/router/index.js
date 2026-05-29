@@ -42,7 +42,11 @@ const routes = [
 
 const router = createRouter({
   history: createWebHistory(),
-  routes
+  routes,
+  scrollBehavior(to, from, savedPosition) {
+    // 始终滚动到顶部
+    return { top: 0, behavior: 'instant' }
+  }
 })
 
 // 路由守卫

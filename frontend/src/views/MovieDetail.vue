@@ -68,6 +68,8 @@ const submitRating = async () => {
 const scoreLabels = ['很差', '较差', '一般', '推荐', '力荐']
 
 onMounted(() => {
+  // 进入页面自动滚动到顶部
+  window.scrollTo({ top: 0, behavior: 'instant' })
   fetchMovie()
   fetchRatings()
   fetchSimilar()
@@ -85,15 +87,16 @@ onMounted(() => {
 
       <!-- Main Content -->
       <div class="detail-content">
-        <!-- Back Button -->
-        <button class="back-btn animate-fade-in" @click="$router.back()">
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M11 4L6 9l5 5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          返回
-        </button>
-
         <!-- Hero Section -->
+        <div class="detail-top-row">
+          <div></div>
+          <button class="back-btn animate-fade-in" @click="$router.back()">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M11 4L6 9l5 5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            返回
+          </button>
+        </div>
         <section class="detail-hero animate-fade-in-up">
           <div class="detail-hero__poster">
             <img v-if="movie.poster_url" :src="movie.poster_url" :alt="movie.title" />
@@ -287,6 +290,13 @@ onMounted(() => {
   gap: 48px;
 }
 
+/* Top Row with Back Button */
+.detail-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 /* Back Button */
 .back-btn {
   display: inline-flex;
@@ -302,7 +312,6 @@ onMounted(() => {
   font-family: inherit;
   cursor: pointer;
   transition: all 0.2s ease;
-  align-self: flex-start;
 }
 
 .back-btn:hover {

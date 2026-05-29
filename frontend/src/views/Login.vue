@@ -1,7 +1,6 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
 import { authAPI } from '../api'
 
 const router = useRouter()
@@ -11,21 +10,31 @@ const form = ref({
   password: ''
 })
 const loading = ref(false)
+const errorMsg = ref('')
 
 const handleLogin = async () => {
+  errorMsg.value = ''
+
   if (!form.value.username || !form.value.password) {
-    ElMessage.warning('请填写用户名和密码')
+    errorMsg.value = '请填写用户名和密码'
     return
   }
+
   loading.value = true
   try {
     const res = await authAPI.login(form.value)
     localStorage.setItem('token', res.token)
     localStorage.setItem('user', JSON.stringify(res.user))
-    ElMessage.success('登录成功')
-    router.push('/')
+
+    // 触发 storage 事件让 App.vue 感知到变化
+    window.dispatchEvent(new Event('storage'))
+
+    // 跳转到首页
+    await router.push('/')
+    // 强制刷新页面以更新导航栏状态
+    window.location.reload()
   } catch (err) {
-    ElMessage.error(err.message)
+    errorMsg.value = err.message || '登录失败，请检查用户名和密码'
   } finally {
     loading.value = false
   }
@@ -51,6 +60,15 @@ const handleLogin = async () => {
         <p class="auth-card__sub">登录你的 Cinemo 账号</p>
       </div>
 
+      <!-- 错误提示 -->
+      <div v-if="errorMsg" class="auth-error">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="8" cy="8" r="6.5"/>
+          <path d="M8 5v3M8 10.5v.5" stroke-linecap="round"/>
+        </svg>
+        {{ errorMsg }}
+      </div>
+
       <form class="auth-form" @submit.prevent="handleLogin">
         <div class="auth-field">
           <label class="auth-field__label">用户名</label>
@@ -58,6 +76,7 @@ const handleLogin = async () => {
             v-model="form.username"
             type="text"
             class="auth-field__input"
+            :class="{ 'auth-field__input--error': errorMsg }"
             placeholder="请输入用户名"
             autocomplete="username"
           />
@@ -68,6 +87,7 @@ const handleLogin = async () => {
             v-model="form.password"
             type="password"
             class="auth-field__input"
+            :class="{ 'auth-field__input--error': errorMsg }"
             placeholder="请输入密码"
             autocomplete="current-password"
           />
@@ -128,7 +148,7 @@ const handleLogin = async () => {
 
 .auth-card__header {
   text-align: center;
-  margin-bottom: 36px;
+  margin-bottom: 32px;
 }
 
 .auth-card__logo {
@@ -152,10 +172,25 @@ const handleLogin = async () => {
   margin: 0;
 }
 
+/* Error message */
+.auth-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: rgba(232, 68, 68, 0.1);
+  border: 1px solid rgba(232, 68, 68, 0.2);
+  border-radius: var(--radius-sm);
+  color: #e84444;
+  font-size: 13px;
+  margin-bottom: 20px;
+  animation: fadeInUp 0.3s var(--ease-out-expo);
+}
+
 .auth-form {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 18px;
   margin-bottom: 28px;
 }
 
@@ -186,6 +221,15 @@ const handleLogin = async () => {
 .auth-field__input:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+.auth-field__input--error {
+  border-color: rgba(232, 68, 68, 0.5);
+}
+
+.auth-field__input--error:focus {
+  border-color: #e84444;
+  box-shadow: 0 0 0 3px rgba(232, 68, 68, 0.15);
 }
 
 .auth-field__input::placeholder {

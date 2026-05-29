@@ -15,11 +15,13 @@ const showUserCard = ref(false)
 onMounted(() => {
   loadUser()
   window.addEventListener('scroll', handleScroll)
+  window.addEventListener('storage', loadUser)
   document.addEventListener('click', handleClickOutside)
 })
 
 onUnmounted(() => {
   window.removeEventListener('scroll', handleScroll)
+  window.removeEventListener('storage', loadUser)
   document.removeEventListener('click', handleClickOutside)
 })
 
