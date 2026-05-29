@@ -1,0 +1,54 @@
+# 华为云生产环境部署配置
+version: '3.8'
+
+services:
+  # GaussDB 数据库
+  gaussdb:
+    image: enmotech/opengauss:5.0.0
+    container_name: gaussdb
+    environment:
+      GS_USERNAME: gaussdb
+      GS_PASSWORD: Gaussdb@2024
+      GS_DB: movie_db
+      GS_PORT: 5432
+    ports:
+      - "5432:5432"
+    volumes:
+      - gaussdb_data:/var/lib/opengauss
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gaussdb -d movie_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  # 后端 Flask 应用
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: movie-backend
+    environment:
+      DATABASE_URL: postgresql://gaussdb:Gaussdb@2024@gaussdb:5432/movie_db
+      SECRET_KEY: cinemo-production-secret-key-2024
+    ports:
+      - "5000:5000"
+    depends_on:
+      gaussdb:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # 前端 Vue 应用
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: movie-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  gaussdb_data:
